@@ -9,5 +9,6 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/spdx/tools-golang v0.5.5 // indirect
-	google.golang.org/protobuf v1.36.7 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
 )
