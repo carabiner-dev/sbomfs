@@ -27,12 +27,14 @@ import (
 	"log"
 
 	"github.com/carabiner-dev/sbomfs"
+	"github.com/protobom/protobom/pkg/mod"
 	"github.com/protobom/protobom/pkg/reader"
 )
 
 func main() {
 	// Parse an existing SBOM file using protobom's reader.
-	r := reader.New()
+	// The SPDX properties mod is needed to read properties stored as annotations.
+	r := reader.New(reader.WithMod(mod.SPDX_READ_ANNOTATIONS_TO_PROPERTIES))
 	doc, err := r.ParseFile("mysbom.spdx.json")
 	if err != nil {
 		log.Fatal(err)
