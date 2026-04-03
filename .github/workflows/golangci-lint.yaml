@@ -1,0 +1,47 @@
+# SPDX-FileCopyrightText: Copyright 2026 Carabiner Systems, Inc
+# SPDX-License-Identifier: Apache-2.0
+
+name: golangci-lint
+
+on:
+  workflow_dispatch: {}
+  pull_request:
+    branches:
+      - main
+
+permissions: {}
+
+jobs:
+  go-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      stable: ${{ steps.versions.outputs.GO_VERSION_STABLE }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Determine Go versions
+        id: versions
+        uses: carabiner-dev/actions/go/versions@486750c75e9c3900944193c0c2d7956a840acf2a # main
+
+  golangci:
+    name: lint
+    needs: go-versions
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: ${{ needs.go-versions.outputs.stable }}
+          cache: true
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@1e7e51e771db61008b38414a730f564565cf7c20 # v9.2.0
+        with:
+          version: v2.11
