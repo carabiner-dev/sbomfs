@@ -103,7 +103,7 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 			}
 			seen[fname] = struct{}{}
 
-			data, err := base64.StdEncoding.DecodeString(prop.Data)
+			data, err := base64.StdEncoding.DecodeString(prop.GetData())
 			if err != nil {
 				continue
 			}
@@ -136,7 +136,7 @@ func (f *FS) WriteFile(name string, data []byte) error {
 	// Try to update an existing property first.
 	for _, node := range f.doc.GetRootNodes() {
 		for _, prop := range node.GetProperties() {
-			if prop.Name == propName {
+			if prop.GetName() == propName {
 				prop.Data = encoded
 				return nil
 			}
@@ -165,9 +165,9 @@ func (f *FS) RemoveFile(name string) error {
 	propName := propertyPrefix + name
 
 	for _, node := range f.doc.GetRootNodes() {
-		for i, prop := range node.Properties {
-			if prop.Name == propName {
-				node.Properties = append(node.Properties[:i], node.Properties[i+1:]...)
+		for i, prop := range node.GetProperties() {
+			if prop.GetName() == propName {
+				node.Properties = append(node.Properties[:i], node.GetProperties()[i+1:]...)
 				return nil
 			}
 		}
@@ -182,8 +182,8 @@ func (f *FS) readProperty(name string) ([]byte, error) {
 
 	for _, node := range f.doc.GetRootNodes() {
 		for _, prop := range node.GetProperties() {
-			if prop.Name == propName {
-				data, err := base64.StdEncoding.DecodeString(prop.Data)
+			if prop.GetName() == propName {
+				data, err := base64.StdEncoding.DecodeString(prop.GetData())
 				if err != nil {
 					return nil, fmt.Errorf("decoding base64 data for %q: %w", name, err)
 				}
@@ -196,10 +196,10 @@ func (f *FS) readProperty(name string) ([]byte, error) {
 
 // propertyFileName returns the filename from a property if it has the sbomfs prefix.
 func propertyFileName(prop *sbom.Property) (string, bool) {
-	if !strings.HasPrefix(prop.Name, propertyPrefix) {
+	if !strings.HasPrefix(prop.GetName(), propertyPrefix) {
 		return "", false
 	}
-	name := strings.TrimPrefix(prop.Name, propertyPrefix)
+	name := strings.TrimPrefix(prop.GetName(), propertyPrefix)
 	if name == "" {
 		return "", false
 	}
@@ -287,12 +287,12 @@ type fileInfo struct {
 	isDir bool
 }
 
-func (fi *fileInfo) Name() string      { return fi.name }
-func (fi *fileInfo) Size() int64       { return fi.size }
-func (fi *fileInfo) Mode() fs.FileMode { return 0o444 }
+func (fi *fileInfo) Name() string       { return fi.name }
+func (fi *fileInfo) Size() int64        { return fi.size }
+func (fi *fileInfo) Mode() fs.FileMode  { return 0o444 }
 func (fi *fileInfo) ModTime() time.Time { return time.Time{} }
-func (fi *fileInfo) IsDir() bool       { return fi.isDir }
-func (fi *fileInfo) Sys() any          { return nil }
+func (fi *fileInfo) IsDir() bool        { return fi.isDir }
+func (fi *fileInfo) Sys() any           { return nil }
 
 // dirEntry implements fs.DirEntry.
 type dirEntry struct {

@@ -5,6 +5,7 @@ package sbomfs
 
 import (
 	"encoding/base64"
+	"errors"
 	"io"
 	"io/fs"
 	"testing"
@@ -46,7 +47,7 @@ func TestFSOpen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		data, err := io.ReadAll(f)
 		if err != nil {
@@ -69,7 +70,7 @@ func TestFSOpen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer f.Close()
+		defer func() { _ = f.Close() }()
 
 		info, err := f.Stat()
 		if err != nil {
@@ -281,7 +282,7 @@ func TestFSStat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	info, err := f.Stat()
 	if err != nil {
@@ -348,7 +349,7 @@ func TestDirReadDir(t *testing.T) {
 
 	// Read remaining — should get 1 + io.EOF.
 	entries, err = d.ReadDir(2)
-	if err != io.EOF {
+	if !errors.Is(err, io.EOF) {
 		t.Fatalf("expected io.EOF, got %v", err)
 	}
 	if len(entries) != 1 {
@@ -357,7 +358,7 @@ func TestDirReadDir(t *testing.T) {
 
 	// Read again — should get 0 + io.EOF.
 	entries, err = d.ReadDir(2)
-	if err != io.EOF {
+	if !errors.Is(err, io.EOF) {
 		t.Fatalf("expected io.EOF, got %v", err)
 	}
 	if len(entries) != 0 {
