@@ -47,7 +47,11 @@ func TestFSOpen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer func() { _ = f.Close() }()
+		defer func() {
+			if err := f.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
 
 		data, err := io.ReadAll(f)
 		if err != nil {
@@ -70,7 +74,11 @@ func TestFSOpen(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer func() { _ = f.Close() }()
+		defer func() {
+			if err := f.Close(); err != nil {
+				t.Fatal(err)
+			}
+		}()
 
 		info, err := f.Stat()
 		if err != nil {
@@ -282,7 +290,11 @@ func TestFSStat(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() { _ = f.Close() }()
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	info, err := f.Stat()
 	if err != nil {
