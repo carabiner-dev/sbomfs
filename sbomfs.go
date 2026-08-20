@@ -22,6 +22,12 @@ import (
 
 const propertyPrefix = "sbomfs:"
 
+// Operation names used in fs.PathError values.
+const (
+	opOpen = "open"
+	opRead = "read"
+)
+
 // FS implements fs.FS, fs.ReadFileFS, and fs.ReadDirFS backed by protobom
 // SBOM node properties. Files are stored as base64-encoded property values
 // on the document's root nodes.
@@ -37,7 +43,7 @@ func New(doc *sbom.Document) *FS {
 // Open opens the named file. It implements fs.FS.
 func (f *FS) Open(name string) (fs.File, error) {
 	if !fs.ValidPath(name) {
-		return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrInvalid}
+		return nil, &fs.PathError{Op: opOpen, Path: name, Err: fs.ErrInvalid}
 	}
 
 	// Root directory
@@ -47,12 +53,12 @@ func (f *FS) Open(name string) (fs.File, error) {
 
 	// No subdirectories yet — reject paths with slashes.
 	if strings.Contains(name, "/") {
-		return nil, &fs.PathError{Op: "open", Path: name, Err: fs.ErrNotExist}
+		return nil, &fs.PathError{Op: opOpen, Path: name, Err: fs.ErrNotExist}
 	}
 
 	data, err := f.readProperty(name)
 	if err != nil {
-		return nil, &fs.PathError{Op: "open", Path: name, Err: err}
+		return nil, &fs.PathError{Op: opOpen, Path: name, Err: err}
 	}
 
 	return &file{
@@ -64,18 +70,18 @@ func (f *FS) Open(name string) (fs.File, error) {
 // ReadFile reads the named file and returns its contents. It implements fs.ReadFileFS.
 func (f *FS) ReadFile(name string) ([]byte, error) {
 	if !fs.ValidPath(name) {
-		return nil, &fs.PathError{Op: "read", Path: name, Err: fs.ErrInvalid}
+		return nil, &fs.PathError{Op: opRead, Path: name, Err: fs.ErrInvalid}
 	}
 	if name == "." {
-		return nil, &fs.PathError{Op: "read", Path: name, Err: fs.ErrInvalid}
+		return nil, &fs.PathError{Op: opRead, Path: name, Err: fs.ErrInvalid}
 	}
 	if strings.Contains(name, "/") {
-		return nil, &fs.PathError{Op: "read", Path: name, Err: fs.ErrNotExist}
+		return nil, &fs.PathError{Op: opRead, Path: name, Err: fs.ErrNotExist}
 	}
 
 	data, err := f.readProperty(name)
 	if err != nil {
-		return nil, &fs.PathError{Op: "read", Path: name, Err: err}
+		return nil, &fs.PathError{Op: opRead, Path: name, Err: err}
 	}
 	return data, nil
 }
@@ -241,7 +247,7 @@ func (d *dir) Stat() (fs.FileInfo, error) {
 }
 
 func (d *dir) Read([]byte) (int, error) {
-	return 0, &fs.PathError{Op: "read", Path: ".", Err: fs.ErrInvalid}
+	return 0, &fs.PathError{Op: opRead, Path: ".", Err: fs.ErrInvalid}
 }
 
 func (d *dir) Close() error {
@@ -259,10 +265,7 @@ func (d *dir) ReadDir(n int) ([]fs.DirEntry, error) {
 		return nil, io.EOF
 	}
 
-	end := d.offset + n
-	if end > len(d.entries) {
-		end = len(d.entries)
-	}
+	end := min(d.offset+n, len(d.entries))
 	entries := d.entries[d.offset:end]
 	d.offset = end
 
