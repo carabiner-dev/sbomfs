@@ -1,8 +1,8 @@
 module github.com/carabiner-dev/sbomfs
 
-go 1.25.11
+go 1.26.0
 
-require github.com/protobom/protobom v0.6.1
+require github.com/protobom/protobom v0.6.2
 
 require (
 	github.com/CycloneDX/cyclonedx-go v0.12.0 // indirect
